@@ -1,23 +1,19 @@
+import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import { auth } from "../../firebase/firebase";
 
-import { googleLogin } from "../../firebase/auth";
+const provider = new GoogleAuthProvider();
 
 export default function LoginScreen() {
+  const login = async () => {
+    await signInWithPopup(auth, provider);
+  };
+
   return (
-    <div className="h-screen flex flex-col justify-center items-center bg-white px-6">
-      <h1 className="text-2xl font-semibold mb-2">
-        Daily Planner
-      </h1>
-
-      <p className="text-gray-500 mb-8 text-center">
-        Track your habits & daily progress
-      </p>
-
-      <button
-        onClick={googleLogin}
-        className="bg-blue-600 text-white px-6 py-3 rounded-lg w-full max-w-xs"
-      >
-        Sign in with Google
-      </button>
-    </div>
+    <button
+      onClick={login}
+      className="bg-blue-600 text-white px-4 py-2 rounded"
+    >
+      Sign in with Google
+    </button>
   );
 }

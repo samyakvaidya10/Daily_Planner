@@ -11,7 +11,6 @@ export function useAuth() {
       setUser(currentUser);
       setLoading(false);
     });
-
     return () => unsub();
   }, []);
 
