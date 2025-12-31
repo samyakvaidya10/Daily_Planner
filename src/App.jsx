@@ -6,7 +6,7 @@ import History from "./pages/History";
 import Settings from "./pages/Settings";
 import { useAuth } from "./hooks/useAuth";
 import Purchases from "./pages/Purchases";
-
+import Calendar from "./pages/Calendar";
 export default function App() {
   const { user, loading } = useAuth();
   const [page, setPage] = useState("home");
@@ -24,6 +24,7 @@ export default function App() {
       <div className="flex-1 overflow-y-auto pb-16">
   {page === "home" && <Home />}
   {page === "history" && <History />}
+{page === "calendar" && <Calendar setPage={setPage} />} 
   {page === "purchases" && <Purchases />}
   {page === "settings" && <Settings />}
 </div>

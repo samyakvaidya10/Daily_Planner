@@ -6,7 +6,8 @@ import AddTaskFAB from "../components/tasks/AddTaskFAB";
 import TaskForm from "../components/tasks/TaskForm";
 import {
   loadTasksForDate,
-  saveTasksForDate
+  saveTasksForDate,
+  loadHabits
 } from "../firebase/firestore";
 import { getEffectiveDateId } from "../utils/date";
 
@@ -20,14 +21,37 @@ export default function Home() {
   const [editingTask, setEditingTask] = useState(null);
 
   /* Load today's tasks */
-  useEffect(() => {
-    async function load() {
-      const data = await loadTasksForDate(dateId);
-      setTasks(data);
-      setLoading(false);
-    }
-    load();
-  }, [dateId]);
+useEffect(() => {
+  async function load() {
+    const dayTasks = await loadTasksForDate(dateId);
+    const habits = await loadHabits();
+
+    const existingHabitIds = dayTasks
+      .filter(t => t.taskType === "habit")
+      .map(t => t.id);
+
+    const missingHabits = habits
+      .filter(h => h.active)
+      .filter(h => !existingHabitIds.includes(h.id))
+      .map(h => ({
+        id: h.id,
+        title: h.title,
+        time: h.time,
+        priority: h.priority,
+        completed: false,
+        subtasks: [],
+        taskType: "habit"
+      }));
+
+    const merged = [...dayTasks, ...missingHabits];
+
+    setTasks(merged);
+    await saveTasksForDate(dateId, merged);
+    setLoading(false);
+  }
+
+  load();
+}, [dateId]);
 
   /* Save whenever tasks change */
   useEffect(() => {
@@ -36,27 +60,39 @@ export default function Home() {
     }
   }, [tasks, loading, dateId]);
 
-  const completedCount = tasks.filter(t => t.completed).length;
-  const progress =
-    tasks.length === 0
-      ? 0
-      : Math.round((completedCount / tasks.length) * 100);
+const habitTasks = tasks.filter(t => t.taskType === "habit");
 
-  if (loading) return <div className="p-4">Loading…</div>;
+const completedCount = habitTasks.filter(t => t.completed).length;
+const progress =
+  habitTasks.length === 0
+    ? 0
+    : Math.round((completedCount / habitTasks.length) * 100);
+
+const visibleTasks = tasks.filter(task => {
+  // Habits always visible
+  if (task.taskType === "habit") return true;
+
+  // Scheduled tasks only on their date
+  if (task.taskType === "scheduled") {
+    return task.scheduledDate === dateId;
+  }
+
+  return false;
+});
 
   return (
     <div className="p-4">
       <Header title="Today" />
       <DailyProgress percent={progress} />
 
-      <TaskList
-        tasks={tasks}
-        setTasks={setTasks}
-        onEditTask={(task) => {
-          setEditingTask(task);
-          setShowForm(true);
-        }}
-      />
+<TaskList
+  tasks={visibleTasks}
+  setTasks={setTasks}
+  onEditTask={(task) => {
+    setEditingTask(task);
+    setShowForm(true);
+  }}
+/>
 
       {/* Floating add button */}
       <AddTaskFAB

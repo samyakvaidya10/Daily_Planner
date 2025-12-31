@@ -40,8 +40,8 @@ export async function createHabit(habit) {
   const user = auth.currentUser;
   if (!user) return;
 
-  await addDoc(
-    collection(db, "users", user.uid, "habits"),
+  await setDoc(
+    doc(db, "users", user.uid, "habits", habit.id),
     habit
   );
 }
