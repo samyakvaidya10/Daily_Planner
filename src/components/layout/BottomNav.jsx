@@ -25,7 +25,13 @@ export default function BottomNav({ page, setPage }) {
         <span className="text-xl">🛒</span>
         Purchases
       </button>
-
+      <button
+        className={btn("projects")}
+        onClick={() => setPage("projects")}
+      >
+        <span className="text-xl">🏗</span>
+        Projects
+      </button>
       <button className={btn("settings")} onClick={() => setPage("settings")}>
         <span className="text-xl">⚙️</span>
         Settings

@@ -26,9 +26,9 @@ useEffect(() => {
     const dayTasks = await loadTasksForDate(dateId);
     const habits = await loadHabits();
 
-    const existingHabitIds = dayTasks
-      .filter(t => t.taskType === "habit")
-      .map(t => t.id);
+const existingHabitIds = dayTasks
+  .filter(t => t.taskType === "habit" || t.skipped)
+  .map(t => t.id);
 
     const missingHabits = habits
       .filter(h => h.active)
@@ -69,10 +69,10 @@ const progress =
     : Math.round((completedCount / habitTasks.length) * 100);
 
 const visibleTasks = tasks.filter(task => {
-  // Habits always visible
+  if (task.skipped) return false;
+
   if (task.taskType === "habit") return true;
 
-  // Scheduled tasks only on their date
   if (task.taskType === "scheduled") {
     return task.scheduledDate === dateId;
   }
@@ -123,12 +123,27 @@ const visibleTasks = tasks.filter(task => {
             setEditingTask(null);
           }}
           onDelete={() => {
-            setTasks(prev =>
-              prev.filter(t => t.id !== editingTask.id)
-            );
-            setShowForm(false);
-            setEditingTask(null);
-          }}
+  setTasks(prev => {
+    const updated = prev.map(t => {
+      // ✅ HABIT → SKIP FOR TODAY
+      if (t.id === editingTask.id && t.taskType === "habit") {
+        return { ...t, skipped: true };
+      }
+
+      return t;
+    })
+    // ✅ REMOVE SCHEDULED TASKS
+    .filter(t =>
+      !(t.id === editingTask.id && t.taskType === "scheduled")
+    );
+
+    saveTasksForDate(dateId, updated);
+    return updated;
+  });
+
+  setShowForm(false);
+  setEditingTask(null);
+}}
         />
       )}
     </div>
