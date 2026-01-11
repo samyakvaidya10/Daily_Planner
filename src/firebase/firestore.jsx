@@ -5,7 +5,7 @@ import {
   getDoc,
   collection,
   addDoc,
-  getDocs
+  getDocs,deleteDoc, updateDoc
 } from "firebase/firestore";
 import { auth } from "./firebase";
 
@@ -59,13 +59,18 @@ export async function loadHabits() {
 
 /* ---------------- PURCHASE LIST ---------------- */
 
-export async function addPurchaseItem(name) {
+export async function addPurchaseItem(item) {
   const user = auth.currentUser;
   if (!user) return;
 
   await addDoc(
     collection(db, "users", user.uid, "purchases"),
-    { name, completed: false }
+    {
+      name: item.name,
+      category: item.category || "Other",
+      completed: item.completed || false,
+      createdAt: Date.now()
+    }
   );
 }
 
@@ -79,3 +84,23 @@ export async function loadPurchaseItems() {
 
   return snap.docs.map(d => ({ id: d.id, ...d.data() }));
 }
+
+export async function deletePurchaseItem(id) {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  await deleteDoc(
+    doc(db, "users", user.uid, "purchases", id)
+  );
+}
+
+export async function updatePurchaseItem(id, updates) {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  await updateDoc(
+    doc(db, "users", user.uid, "purchases", id),
+    updates
+  );
+}
+
